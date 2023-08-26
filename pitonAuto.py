@@ -60,7 +60,7 @@ def mostrar_key(e):
 
 
 def update_screen():
-    global x, y, space, snake, alto, ancho, manzanaExiste, manzanaX, manzanaY, estaViva, stop_threads, gano, puntaje, sigue, banner
+    global x, y, space, snake, alto, ancho, manzanaExiste, manzanaX, manzanaY, estaViva, stop_threads, gano, puntaje, sigue, banner, teclado
     global derecha, izquierda, abajo, arriba
 
     if not gano:
@@ -103,7 +103,12 @@ def update_screen():
             crecer_snake(x, y)
             puntaje += 1
             manzanaExiste = False
+
+        if not estaViva:
+            banner = Colors.BLUE+bannerPerder + Colors.RESET
     else:
+        # ESTO ES CUANDO GANA
+        banner = Colors.BLUE+bannerGanar + Colors.RESET
         space = crear_space(ancho, alto)
         for i in snake:
             space[i[1]][i[0]] = Colors.RED+"o"+Colors.RESET
@@ -111,12 +116,9 @@ def update_screen():
         if len(snake) != 1:
             snake.pop()
         else:
-            banner = Colors.BLUE+bannerGanar + Colors.RESET
             stop_threads = True
             sigue = False
-
-    if not estaViva:
-        banner = Colors.BLUE+bannerPerder + Colors.RESET
+        time.sleep(0.25)
 
     clear_console()
     kb.on_press(mostrar_key)
@@ -173,8 +175,7 @@ bannerGanar = """
    //      ///////    ///////        //       // // //      ///    
 """
 
-
-banner = Colors.BLUE + """
+bannerSnake = Colors.BLUE + """
   ******** ****     **     **     **   ** ********
  **////// /**/**   /**    ****   /**  ** /**///// 
 /**       /**//**  /**   **//**  /** **  /**      
@@ -186,52 +187,98 @@ banner = Colors.BLUE + """
 
 """ + Colors.RESET
 
-
-ancho = int(input("Write the width: "))+2
-alto = int(input("Write the height: "))+2
-
-estaViva = True
-gano = False
-stop_threads = False
-manzanaExiste = False
-derecha, izquierda, abajo, arriba = True, False, False, False
-sigue = True
+banner = ""
 
 
-puntaje = 0
-x, y = 1, 1
-snake = [(0, 0), (0, 0)]
-space = crear_space(ancho, alto)
-teclado = ""
+def main():
+    global x, y, space, snake, alto, ancho, manzanaExiste, manzanaX, manzanaY, estaViva, stop_threads, gano, puntaje, sigue, banner, teclado
+    global derecha, izquierda, abajo, arriba
+    print("\t[\tEnter the dimensions of the grid\t]")
+    while True:
+        ancho = int(input("Write the width: "))+2
+        alto = int(input("Write the height: "))+2
 
-
-thread = threading.Thread(target=comenzar)
-thread.start()
-
-try:
-    while sigue:
-        # print(kb.read_key())
-        # key = kb.read_key()
-
-        if kb.is_pressed("right"):
-            derecha, izquierda, abajo, arriba = True, False, False, False
-
-        if kb.is_pressed("left"):
-            derecha, izquierda, abajo, arriba = False, True, False, False
-
-        if kb.is_pressed("down"):
-            derecha, izquierda, abajo, arriba = False, False, True, False
-
-        if kb.is_pressed("up"):
-            derecha, izquierda, abajo, arriba = False, False, False, True
-
-        if kb.is_pressed("esc"):
-            stop_threads = True
+        if ancho > 3 and alto > 3:
             break
+        else:
+            print(Colors.RED + "\tERROR: Enter a value greater than 1" + Colors.RESET)
 
-        if not estaViva:
-            stop_threads = True
-            break
+    estaViva = True
+    gano = False
+    stop_threads = False
+    manzanaExiste = False
+    derecha, izquierda, abajo, arriba = True, False, False, False
+    sigue = True
+    banner = bannerSnake
 
-except KeyboardInterrupt:
-    stop_threads = True
+    puntaje = 0
+    x, y = 1, 1
+    snake = [(0, 0), (0, 0)]
+    space = crear_space(ancho, alto)
+    teclado = ""
+
+    thread = threading.Thread(target=comenzar)
+    thread.start()
+
+    try:
+        while sigue:
+            if kb.is_pressed("right"):
+                derecha, izquierda, abajo, arriba = True, False, False, False
+
+            if kb.is_pressed("left"):
+                derecha, izquierda, abajo, arriba = False, True, False, False
+
+            if kb.is_pressed("down"):
+                derecha, izquierda, abajo, arriba = False, False, True, False
+
+            if kb.is_pressed("up"):
+                derecha, izquierda, abajo, arriba = False, False, False, True
+
+            if kb.is_pressed("esc"):
+                stop_threads = True
+                break
+
+            if not estaViva:
+                stop_threads = True
+                break
+
+    except KeyboardInterrupt:
+        stop_threads = True
+
+    thread.join()
+
+
+if __name__ == "__main__":
+
+    print(Colors.GREEN + """
+                        __
+            _______    /*_>-<
+        ___/ _____ \__/ /
+       <____/     \____/
+        """ + Colors.RESET)
+    print(Colors.CYAN + "Welcome to Snake Console" + Colors.RESET)
+    print(Colors.CYAN + "Author: Wil-Go" + Colors.RESET)
+    iniciado = True
+    while iniciado:
+        main()
+        while True:
+            try:
+                print(Colors.CYAN +
+                      "Press 'esc' to exit or 'space' to restart"+Colors.RESET)
+                event = kb.read_event()
+
+                if event.name == 'esc':
+                    iniciado = False
+                    break
+                elif event.name == 'space':
+                    clear_console()
+                    print("Lets start again!")
+                    break
+                else:
+                    print("Press a valid input!!")
+            except KeyboardInterrupt:
+                iniciado = False
+                break
+
+print("bye")
+time.sleep(1)
